@@ -87,9 +87,31 @@ public class NNImpl{
 	
 	public int calculateOutputForInstance(Instance inst)
 	{
-		return -1;
 		// TODO: add code here
 		//Calculates the output given an example (inst)
+		//Calculate euclidian distance between each of the 5 numbers and assign the closest one
+		int count = 0;
+		int output = 0;
+		double largest = 0;
+		for(Node outNode : outputNodes) {
+			if (outNode.getOutput() >= largest) {
+				switch (count) {
+					case 0:
+						output = 1;
+					case 1:
+						output = 4
+					case 2:
+						output = 7;
+					case 3:
+						output = 8;
+					case 4:
+						output = 9;
+					default:
+						return -1;
+				}
+			}
+		}
+		return -1;
 	}
 	
 
@@ -106,5 +128,7 @@ public class NNImpl{
 	{
 		// TODO: add code here
 		//Given a training set, fixed learning rate, and number of epochs train the neural network
+		//Adjust weights
+
 	}
 }

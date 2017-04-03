@@ -53,7 +53,6 @@ public class Node{
 	 */
 	public void calculateOutput()
 	{
-		
 		if(type==2 || type==4)//Not an input or bias node
 		{
 			// TODO: add code here
@@ -66,9 +65,6 @@ public class Node{
 				x += input.weight * input.node.outputValue;
 			//Sigmoid activation function
 			g = 1/(1+ Math.exp(-x));
-			// where x = Sum(i = 1 to n) (wi *xi)
-			// xi is the input given and wi are their weights
-			// n is the number of inputs
 			this.outputValue = g;
 		}
 	}
