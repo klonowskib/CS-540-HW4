@@ -89,6 +89,7 @@ public class NNImpl{
 	{
 		return -1;
 		// TODO: add code here
+		//Calculates the output given an example (inst)
 	}
 	
 
@@ -104,5 +105,6 @@ public class NNImpl{
 	public void train()
 	{
 		// TODO: add code here
+		//Given a training set, fixed learning rate, and number of epochs train the neural network
 	}
 }
