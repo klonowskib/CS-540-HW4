@@ -91,15 +91,17 @@ public class NNImpl{
 		//Calculates the output given an example (inst)
 		//Calculate euclidian distance between each of the 5 numbers and assign the closest one
 		int count = 0;
-		int output = 0;
+		int output = -1;
 		double largest = 0;
-		for(Node outNode : outputNodes) {
-			if (outNode.getOutput() >= largest) {
+
+		for(double attr : inst.attributes) {
+			if (attr >= largest) {
+				largest = attr;
 				switch (count) {
 					case 0:
 						output = 1;
 					case 1:
-						output = 4
+						output = 4;
 					case 2:
 						output = 7;
 					case 3:
@@ -111,7 +113,10 @@ public class NNImpl{
 				}
 			}
 		}
-		return -1;
+		System.out.println(output);
+		if (output == -1)
+			System.out.println("Invalid output value for this instance");
+		return output;
 	}
 	
 
@@ -129,6 +134,19 @@ public class NNImpl{
 		// TODO: add code here
 		//Given a training set, fixed learning rate, and number of epochs train the neural network
 		//Adjust weights
+
+		//For each training point
+		for(Instance inst : this.trainingSet) {
+			//O = NN output(network e)
+			double big_O = calculateOutputForInstance(inst);
+			//T = desired output
+			double big_T = calculateOutputForInstance(inst);
+			//Error = (T-O) (calculate at all output units)
+			//compute delta_w_j,k = alpha * a_j delta_k = alpha * a_j(T_k - O_k)g'(in_k)
+			//delta_w_i,j = alpha * a_i * delta_j = alpha * a_i * g'(in_j) SUM(w_j,k * (T_k - O_k) * g'(in_k)
+			//for all p,q in NN w_p,q = w_p,q + delta_p,q
+
+		}
 
 	}
 }
