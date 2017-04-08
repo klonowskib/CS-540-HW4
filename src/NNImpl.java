@@ -175,7 +175,7 @@ public class NNImpl{
 
 
 			/* Back propogation */
-			//propogate deltas backwards from output layer to input layer
+			//output to hidden
 			for(Node output : outputNodes) {
 				output.calculateOutput();
 				output.setDelta(output.g_prime() * (inst.classValues.get(count) - output.getOutput()));
@@ -189,6 +189,7 @@ public class NNImpl{
 				}
 
 			}
+			//hidden to input
 			for(Node node : hiddenNodes) {
 				int i = 0;
 				int sum = 0;
@@ -199,7 +200,6 @@ public class NNImpl{
 					i++;
 				}
 			}
-
 			/* End Back propogation */
 
 			/* Update weights */
@@ -210,7 +210,6 @@ public class NNImpl{
 					pair.weight = pair.weight + (learningRate * parent.getOutput() * node.getDelta());
 				}
 			}
-
 
 			//weights from input to hidden
 			for(Node node : hiddenNodes) {
