@@ -1,7 +1,7 @@
 /**
  * The main class that handles the entire network
  * Has multiple attributes each with its own use
- * 
+ *
  */
 
 import java.util.*;
@@ -11,25 +11,25 @@ public class NNImpl{
 	public ArrayList<Node> inputNodes=null;//list of the input layer nodes.
 	public ArrayList<Node> hiddenNodes=null;//list of the hidden layer nodes
 	public ArrayList<Node> outputNodes=null;// list of the output layer nodes
-	
+
 	public ArrayList<Instance> trainingSet=null;//the training set
-	
+
 	Double learningRate=1.0; // variable to store the learning rate
 	int maxEpoch=1; // variable to store the maximum number of epochs
-	
+
 	/**
- 	* This constructor creates the nodes necessary for the neural network
- 	* Also connects the nodes of different layers
- 	* After calling the constructor the last node of both inputNodes and  
- 	* hiddenNodes will be bias nodes. 
- 	*/
-	
+	 * This constructor creates the nodes necessary for the neural network
+	 * Also connects the nodes of different layers
+	 * After calling the constructor the last node of both inputNodes and
+	 * hiddenNodes will be bias nodes.
+	 */
+
 	public NNImpl(ArrayList<Instance> trainingSet, int hiddenNodeCount, Double learningRate, int maxEpoch, Double [][]hiddenWeights, Double[][] outputWeights)
 	{
 		this.trainingSet=trainingSet;
 		this.learningRate=learningRate;
 		this.maxEpoch=maxEpoch;
-		
+
 		//input layer nodes
 		inputNodes=new ArrayList<Node>();
 		int inputNodeCount=trainingSet.get(0).attributes.size();
@@ -39,11 +39,11 @@ public class NNImpl{
 			Node node=new Node(0);
 			inputNodes.add(node);
 		}
-		
+
 		//bias node from input layer to hidden
 		Node biasToHidden=new Node(1);
 		inputNodes.add(biasToHidden);
-		
+
 		//hidden layer nodes
 		hiddenNodes=new ArrayList<Node> ();
 		for(int i=0;i<hiddenNodeCount;i++)
@@ -57,11 +57,11 @@ public class NNImpl{
 			}
 			hiddenNodes.add(node);
 		}
-		
+
 		//bias node from hidden layer to output
 		Node biasToOutput=new Node(3);
 		hiddenNodes.add(biasToOutput);
-			
+
 		//Output node layer
 		outputNodes=new ArrayList<Node> ();
 		for(int i=0;i<outputNodeCount;i++)
@@ -72,11 +72,11 @@ public class NNImpl{
 			{
 				NodeWeightPair nwp=new NodeWeightPair(hiddenNodes.get(j), outputWeights[i][j]);
 				node.parents.add(nwp);
-			}	
+			}
 			outputNodes.add(node);
-		}	
+		}
 	}
-	
+
 	/**
 	 * Get the output from the neural network for a single instance
 	 * Return the idx with highest output values. For example if the outputs
@@ -84,7 +84,7 @@ public class NNImpl{
 	 * of the outputNodes are [0.1, 0.5, 0.1, 0.5, 0.2], it should return 3. 
 	 * The parameter is a single instance. 
 	 */
-	
+
 	public int calculateOutputForInstance(Instance inst)
 	{
 		// TODO: add code here
@@ -147,15 +147,59 @@ public class NNImpl{
 	}
 	/**
 	 * Train the neural networks with the given parameters
-	 * 
+	 *
 	 * The parameters are stored as attributes of this class
 	 */
-	
+
 	public void train()
 	{
 		// TODO: add code here
 		//Given a training set, fixed learning rate, and number of epochs train the neural network
 		//Adjust weights
+
+		/*
+		  for each weight w_ij,  set to random small number
+		  end for
+		*/
+		for (Instance inst : trainingSet) {
+			int count = 0;
+
+			/* Forward pass */
+			for (Node input : inputNodes)
+				//set the input to the corresponging aspect of the instance
+				input.setInput(inst.attributes.get(count));
+			for(Node hidden : hiddenNodes)
+				hidden.calculateOutput();
+			/* Forward pass */
+
+
+
+			/* Back propogation */
+			//propogate deltas backwards from output layer to input layer
+			for(Node output : outputNodes) {
+				//delta_j  = g'(input_j) * (y_j - a_j)
+				output.calculateOutput();
+				output.setDelta_j( output.g_prime() * (inst.classValues.get(count) - output.getOutput()));
+			}
+			for(Node node : hiddenNodes) {
+				node.setDelta_i(node.g_prime() * node.getSum() * node.getDelta_j());
+			}
+			/* End Back propogation */
+
+			//for l = L - 1 to 1 {
+			for(Node node : hiddenNodes) {
+				node.setDelta_i(node.g_prime() * );
+			}
+			for(Node node : inputNodes) {
+
+			}
+			//delta_i = g'(input_i)*SUM( w_ij * delta_j)
+			//Update every weight in the network using deltas
+			//for each weight w_ij {
+			//w_ij = w_ij + learning rate * a_i * delta_j
+		}
+
+
 
 		//For each training point
 		for(Instance inst : this.trainingSet) {
