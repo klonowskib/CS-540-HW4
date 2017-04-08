@@ -15,23 +15,21 @@ public class Node{
 	private Double inputValue=0.0;
 	private Double outputValue=0.0; // Output value of a node: same as input value for an iput node, 1.0 for bias nodes and calculate based on Sigmoid function for hidden and output nodes
 	private Double sum=0.0; // sum of wi*xi
-	private Double delta_j = 0.0;
-	private Double delta_i = 0.0;
+	private Double delta = 0.0;
 
-	public void setDelta_j (Double value) {
-		this.delta_j = value;
-	}
-	public double getDelta_j () {
-		return  this.delta_j;
-	}
 
-	public void setDelta_i (Double value) {
-		this.delta_i = value;
+	public void setDelta (Double value) {
+		this.delta = value;
 	}
-	public double getDelta_i () {
-		return  this.delta_i;
+	public double getDelta () {
+		return  this.delta;
 	}
 
+	public void update_weights (double alpha) {
+		for (NodeWeightPair nodeWeightPair : this.parents) {
+			nodeWeightPair.weight = nodeWeightPair.weight + alpha * nodeWeightPair.node.getOutput() * delta;
+		}
+	}
 	//Create a node with a specific type
 	public Node(int type)
 	{

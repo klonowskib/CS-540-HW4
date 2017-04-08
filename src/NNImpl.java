@@ -177,37 +177,47 @@ public class NNImpl{
 			/* Back propogation */
 			//propogate deltas backwards from output layer to input layer
 			for(Node output : outputNodes) {
-				//delta_j  = g'(input_j) * (y_j - a_j)
 				output.calculateOutput();
-				output.setDelta_j( output.g_prime() * (inst.classValues.get(count) - output.getOutput()));
+				output.setDelta(output.g_prime() * (inst.classValues.get(count) - output.getOutput()));
+				int i = 0;
+				int sum = 0;
+				for(NodeWeightPair pair : output.parents) {
+					Node parent = pair.node;
+					sum += output.getSum()* output.getDelta();
+					parent.setDelta(output.g_prime() + sum);
+					i++;
+				}
+
 			}
 			for(Node node : hiddenNodes) {
-				node.setDelta_i(node.g_prime() * node.getSum() * node.getDelta_j());
+				int i = 0;
+				int sum = 0;
+				for(NodeWeightPair pair : node.parents) {
+					Node parent = pair.node;
+					sum += node.getSum()* node.getDelta();
+					parent.setDelta(node.g_prime() + sum);
+					i++;
+				}
 			}
+
 			/* End Back propogation */
 
-			//for l = L - 1 to 1 {
+			/* Update weights */
+			// weights from hidden to output
+			for(Node node : outputNodes) {
+				for(NodeWeightPair pair : node.parents) {
+					Node parent = pair.node;
+					pair.weight = pair.weight + (learningRate * parent.getOutput() * node.getDelta());
+				}
+			}
+
+
+			//weights from input to hidden
 			for(Node node : hiddenNodes) {
-				node.setDelta_i(node.g_prime() * );
-			}
-			for(Node node : inputNodes) {
-
-			}
-			//delta_i = g'(input_i)*SUM( w_ij * delta_j)
-			//Update every weight in the network using deltas
-			//for each weight w_ij {
-			//w_ij = w_ij + learning rate * a_i * delta_j
-		}
-
-
-
-		//For each training point
-		for(Instance inst : this.trainingSet) {
-			int count = 0;
-			for(Node input : this.inputNodes)
-				input.setInput(inst.attributes.get(count));
-			for(Node hidden : hiddenNodes) {
-
+				for(NodeWeightPair pair : node.parents) {
+					Node parent = pair.node;
+					pair.weight = pair.weight + (learningRate * parent.getOutput() * node.getDelta());
+				}
 			}
 		}
 	}
