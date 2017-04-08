@@ -89,14 +89,11 @@ public class NNImpl{
 	{
 		// TODO: add code here
 		//Calculates the output given an example (inst)
-		//Calculate euclidian distance between each of the 5 numbers and assign the closest one
 		int count = 0;
 		int output = -1;
-		double largest = 0;
-
-		for(double attr : inst.attributes) {
-			if (attr >= largest) {
-				largest = attr;
+		double largest = -1000;
+		for(Node out : this.outputNodes) {
+			if (out.getOutput() >= largest) {
 				switch (count) {
 					case 0:
 						output = 1;
@@ -112,17 +109,42 @@ public class NNImpl{
 						return -1;
 				}
 			}
+			count++;
+		}
+		System.out.println(output);
+		if (output == -1)
+			System.out.println("This should never be reached");
+		return output;
+	}
+
+	public int calculateClass (Instance inst) {
+		int count = 0;
+		int output = -1;
+		double largest = 0;
+		for(double classValue : inst.classValues) {
+			if (classValue == 1) {
+				switch (count) {
+					case 0:
+						output = 1;
+					case 1:
+						output = 4;
+					case 2:
+						output = 7;
+					case 3:
+						output = 8;
+					case 4:
+						output = 9;
+					default:
+						return -1;
+				}
+			}
+			count++;
 		}
 		System.out.println(output);
 		if (output == -1)
 			System.out.println("Invalid output value for this instance");
 		return output;
 	}
-	
-
-	
-	
-	
 	/**
 	 * Train the neural networks with the given parameters
 	 * 
@@ -137,16 +159,12 @@ public class NNImpl{
 
 		//For each training point
 		for(Instance inst : this.trainingSet) {
-			//O = NN output(network e)
-			double big_O = calculateOutputForInstance(inst);
-			//T = desired output
-			double big_T = calculateOutputForInstance(inst);
-			//Error = (T-O) (calculate at all output units)
-			//compute delta_w_j,k = alpha * a_j delta_k = alpha * a_j(T_k - O_k)g'(in_k)
-			//delta_w_i,j = alpha * a_i * delta_j = alpha * a_i * g'(in_j) SUM(w_j,k * (T_k - O_k) * g'(in_k)
-			//for all p,q in NN w_p,q = w_p,q + delta_p,q
+			int count = 0;
+			for(Node input : this.inputNodes)
+				input.setInput(inst.attributes.get(count));
+			for(Node hidden : hiddenNodes) {
 
+			}
 		}
-
 	}
 }

@@ -49,7 +49,6 @@ public class Node{
 	 * Calculate the output of a Sigmoid node.
 	 * You can assume that outputs of the parent nodes have already been calculated
 	 * You can get this value by using getOutput()
-	 * @param train: the training set
 	 */
 	public void calculateOutput()
 	{
@@ -76,7 +75,7 @@ public class Node{
 	//Gets the output value
 	public double getOutput()
 	{
-		
+
 		if(type==0)//Input node
 		{
 			return inputValue;
@@ -89,7 +88,7 @@ public class Node{
 		{
 			return outputValue;
 		}
-		
+
 	}
 }
 
