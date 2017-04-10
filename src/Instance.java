@@ -19,4 +19,12 @@ public class Instance{
 		classValues=new ArrayList<Integer>();
 	}
 	
+	public int classification () {
+		int value = 0;
+		for (int i = 0; i< classValues.size(); i++) {
+			if(classValues.get(i) == 1) 
+				value = i;
+		}
+		return value;
+	}
 }

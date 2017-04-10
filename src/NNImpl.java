@@ -87,64 +87,39 @@ public class NNImpl{
 
 	public int calculateOutputForInstance(Instance inst)
 	{
-		// TODO: add code here
-		//Calculates the output given an example (inst)
+		ArrayList<Double> output = new ArrayList<Double>();
 		int count = 0;
-		int output = -1;
-		double largest = -1000;
-		for(Node out : this.outputNodes) {
-			if (out.getOutput() >= largest) {
-				switch (count) {
-					case 0:
-						output = 1;
-					case 1:
-						output = 4;
-					case 2:
-						output = 7;
-					case 3:
-						output = 8;
-					case 4:
-						output = 9;
-					default:
-						return -1;
-				}
+		/* Forward pass */
+		for (Node input : inputNodes) {
+			//set the input to the corresponding aspect of the instance
+			try {
+				input.setInput(inst.attributes.get(count));
+			}
+			catch(IndexOutOfBoundsException e){}
+			count++;
+		}
+		for(Node n : hiddenNodes)
+			n.calculateOutput();
+		//System.out.println();
+		for(Node n : outputNodes)
+			n.calculateOutput();
+		/* Forward pass */
+
+		int prediction = 0;
+		double largest = -1;
+		count = 0;
+		for(Node n : outputNodes) {
+			if(largest <= n.getOutput()) {
+				largest = n.getOutput();
+				prediction = count;
 			}
 			count++;
 		}
-		System.out.println(output);
-		if (output == -1)
-			System.out.println("This should never be reached");
-		return output;
+		System.out.println(prediction);
+		return prediction;
 	}
 
-	public int calculateClass (Instance inst) {
-		int count = 0;
-		int output = -1;
-		double largest = 0;
-		for(double classValue : inst.classValues) {
-			if (classValue == 1) {
-				switch (count) {
-					case 0:
-						output = 1;
-					case 1:
-						output = 4;
-					case 2:
-						output = 7;
-					case 3:
-						output = 8;
-					case 4:
-						output = 9;
-					default:
-						return -1;
-				}
-			}
-			count++;
-		}
-		System.out.println(output);
-		if (output == -1)
-			System.out.println("Invalid output value for this instance");
-		return output;
-	}
+
 	/**
 	 * Train the neural networks with the given parameters
 	 *
@@ -153,70 +128,60 @@ public class NNImpl{
 
 	public void train()
 	{
-		// TODO: add code here
-		//Given a training set, fixed learning rate, and number of epochs train the neural network
-		//Adjust weights
+		int epoch = 0;
+		while (epoch <= maxEpoch) {
+			epoch++;
+			for (Instance inst : trainingSet) {
+				int inst_out = this.calculateOutputForInstance(inst);
+				int [] o = new int[inst.classValues.size()];
+				for(int tmp : o) {
+					tmp = 0;
+				}
+				o[inst_out] = 1;
 
-		/*
-		  for each weight w_ij,  set to random small number
-		  end for
-		*/
-		for (Instance inst : trainingSet) {
-			int count = 0;
-
-			/* Forward pass */
-			for (Node input : inputNodes)
-				//set the input to the corresponging aspect of the instance
-				input.setInput(inst.attributes.get(count));
-			for(Node hidden : hiddenNodes)
-				hidden.calculateOutput();
-			/* Forward pass */
-
-
-
-			/* Back propogation */
-			//output to hidden
-			for(Node output : outputNodes) {
-				output.calculateOutput();
-				output.setDelta(output.g_prime() * (inst.classValues.get(count) - output.getOutput()));
-				int i = 0;
-				int sum = 0;
-				for(NodeWeightPair pair : output.parents) {
-					Node parent = pair.node;
-					sum += output.getSum()* output.getDelta();
-					parent.setDelta(output.g_prime() + sum);
-					i++;
+				/* Back propogation */
+				//output to hidden
+				int count = 0;
+				for(Node j : outputNodes){
+					j.setDelta(j.g_prime() * (inst.classValues.get(count) - o[count]));
+					for(NodeWeightPair parent : j.parents) {
+						Node i = parent.node;
+						double value = i.g_prime() * j.getSum() * j.getDelta();
+						i.setDelta(value);
+					}
+					count++;
+					j.update_weights(learningRate);
 				}
 
-			}
-			//hidden to input
-			for(Node node : hiddenNodes) {
-				int i = 0;
-				int sum = 0;
-				for(NodeWeightPair pair : node.parents) {
-					Node parent = pair.node;
-					sum += node.getSum()* node.getDelta();
-					parent.setDelta(node.g_prime() + sum);
-					i++;
+				//hidden to input
+				for(Node j : hiddenNodes) {
+					try {
+						for (NodeWeightPair parent : j.parents) {
+							Node i = parent.node;
+							//System.out.println("hidden to input");
+							double g = 1 / (1 + Math.exp(-i.getSum()));
+							double gp = g * (1 - g);
+							double value = gp * j.getSum() * j.getDelta();
+							i.setDelta(value);
+						}
+					} catch (NullPointerException e) {}
+					j.update_weights(this.learningRate);
 				}
-			}
-			/* End Back propogation */
 
-			/* Update weights */
-			// weights from hidden to output
-			for(Node node : outputNodes) {
-				for(NodeWeightPair pair : node.parents) {
-					Node parent = pair.node;
-					pair.weight = pair.weight + (learningRate * parent.getOutput() * node.getDelta());
+				/* Update weights */
+				// weights from hidden to output
+				for(Node j : outputNodes) {
+					try {
+						j.update_weights(this.learningRate);
+					} catch (NullPointerException e) {
+						e.printStackTrace();
+					}
 				}
-			}
+				for (Node n : hiddenNodes) {
+					try {n.update_weights(this.learningRate);}
+					catch (NullPointerException e ){}
+				}
 
-			//weights from input to hidden
-			for(Node node : hiddenNodes) {
-				for(NodeWeightPair pair : node.parents) {
-					Node parent = pair.node;
-					pair.weight = pair.weight + (learningRate * parent.getOutput() * node.getDelta());
-				}
 			}
 		}
 	}
