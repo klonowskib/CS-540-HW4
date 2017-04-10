@@ -18,13 +18,17 @@ public class Node{
 	private Double delta = 0.0;
 
 
-	public void setDelta (Double value) {
+	/*public void setDelta (Double value) {
 		this.delta = value;
 	}
 	public double getDelta () {
 		return  this.delta;
 	}
+	*/
+	public void updateWeight () {
 
+	}
+	public double delta_w () {return  1.0;}
 
 	//Create a node with a specific type
 	public Node(int type)
@@ -65,6 +69,13 @@ public class Node{
 		}
 	}
 
+
+	public void setDelta(double delta) {
+		this.delta = delta;
+	}
+	public double setDelta() {
+		return this.delta;
+	}
 	/**
 	 * Calculate the output of a Sigmoid node.
 	 * You can assume that outputs of the parent nodes have already been calculated
@@ -74,25 +85,24 @@ public class Node{
 	{
 		if(type==2 || type==4)//Not an input or bias node
 		{
-			int n; //Number of inputs
-			double x = 0; //result of the summation to be done below
-			double g = 0; //placeholder for output value
-
-			//Calculate the x value for the sigmoid
-			for (NodeWeightPair input : this.parents) {
-				x += (input.weight * input.node.getOutput());
-				//System.out.println("weight " + input.weight + " input " + input.node.getOutput()+ " sum " + x + " type " + type);
-			}
-			this.sum = x;
-			//Sigmoid activation function
-			g = 1/(1+ Math.exp(-this.sum));
-			//System.out.println("result " + g + " sum: " + sum + " type " + type);
-			this.outputValue = g;
+			this.calc_sum();
+			this.outputValue = g(this.sum);
 		}
 	}
 
 	public double g_prime () {
-		return this.getOutput() * (1- this.getOutput());
+		return g(this.sum) * (1- g(this.sum));
+	}
+
+	public void calc_sum () {
+		double tmp_sum = 0;
+		for(NodeWeightPair parent: parents)
+			tmp_sum += parent.node.getOutput() * parent.weight;
+		this.sum = tmp_sum;
+	}
+
+	public double g (double x) {
+		return 1/(1+Math.exp(-x));
 	}
 
 	public double getSum() {

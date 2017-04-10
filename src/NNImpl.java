@@ -81,12 +81,13 @@ public class NNImpl{
 	 * Get the output from the neural network for a single instance
 	 * Return the idx with highest output values. For example if the outputs
 	 * of the outputNodes are [0.1, 0.5, 0.2, 0.1, 0.1], it should return 1. If outputs
-	 * of the outputNodes are [0.1, 0.5, 0.1, 0.5, 0.2], it should return 3. 
-	 * The parameter is a single instance. 
+	 * of the outputNodes are [0.1, 0.5, 0.1, 0.5, 0.2], it should return 3.
+	 * The parameter is a single instance.
 	 */
 
 	public int calculateOutputForInstance(Instance inst)
 	{
+		double largest = 0;
 		ArrayList<Double> output = new ArrayList<Double>();
 		int count = 0;
 		/* Forward pass */
@@ -95,7 +96,9 @@ public class NNImpl{
 			try {
 				input.setInput(inst.attributes.get(count));
 			}
-			catch(IndexOutOfBoundsException e){}
+			catch(IndexOutOfBoundsException e){
+				//System.out.println("bad index");
+			}
 			count++;
 		}
 		for(Node n : hiddenNodes)
@@ -106,16 +109,16 @@ public class NNImpl{
 		/* Forward pass */
 
 		int prediction = 0;
-		double largest = -1;
 		count = 0;
 		for(Node n : outputNodes) {
-			if(largest <= n.getOutput()) {
-				largest = n.getOutput();
+			double out = n.getOutput();
+			if(largest <= out) {
+				largest = out;
 				prediction = count;
 			}
 			count++;
 		}
-		System.out.println(prediction);
+		//System.out.println(prediction);
 		return prediction;
 	}
 
@@ -138,9 +141,55 @@ public class NNImpl{
 					tmp = 0;
 				}
 				o[inst_out] = 1;
+				double [] error = new double[outputNodes.size()];
+				double [] delta_k = new double[outputNodes.size()];
 
+				int count = 0;
+				double [][] delta_jk = new double [hiddenNodes.size()-1][outputNodes.size()];
+				double [] delta_j = new double[hiddenNodes.size()];
+				for(int k_count =0; k_count < outputNodes.size(); k_count++) {
+					error[k_count] = (inst.classValues.get(k_count) - o[k_count]);
+					delta_k[k_count] = error[k_count]* outputNodes.get(k_count).g_prime();
+					for(int j_count = 0; j_count < hiddenNodes.size()-1; j_count++) {
+						Node j = hiddenNodes.get(j_count);
+						j.calculateOutput();
+						delta_jk[j_count][k_count] = learningRate * j.getOutput() * delta_k[k_count];
+						//used to update weights between l=1 and l=0
+						delta_j[j_count] += j.g_prime() * outputNodes.get(k_count).getSum() * delta_k[k_count];
+					}
+				}
+				double [][] delta_ij = new double [inputNodes.size()][ hiddenNodes.size()];
+				for (int j_count = 0; j_count < hiddenNodes.size()-1; j_count++) {
+
+					try {
+						for(int i_count = 0; i_count < inputNodes.size()-1; i_count++) {
+							Node i = inputNodes.get(i_count);
+							delta_ij[i_count][j_count] = learningRate * i.getOutput() * delta_j[j_count];
+							i_count++;
+						}
+					}
+					catch (NullPointerException e) {}
+					j_count++;
+				}
+				try {
+					for(int k_count = 0; k_count < delta_jk.length - 1; k_count++ ) {
+						for(int j_count =0; j_count < delta_jk[k_count].length -1; j_count++) {
+							outputNodes.get(k_count).parents.get(j_count).weight += delta_jk[j_count][k_count];
+						}
+					}
+					for(int j_count = 0; j_count < delta_ij.length - 1; j_count++ ) {
+						for(int i_count =0; i_count < delta_ij[j_count].length-1; i_count++) {
+							Node j = hiddenNodes.get(j_count);
+							j.parents.get(i_count).weight += delta_ij[i_count][j_count];
+						}
+					}
+				}
+				catch (NullPointerException e){}
+
+			}
 				/* Back propogation */
-				//output to hidden
+			//output to hidden
+				/*
 				int count = 0;
 				for(Node j : outputNodes){
 					j.setDelta(j.g_prime() * (inst.classValues.get(count) - o[count]));
@@ -152,25 +201,27 @@ public class NNImpl{
 					count++;
 					j.update_weights(learningRate);
 				}
-
+				*/
+				/*
 				//hidden to input
 				for(Node j : hiddenNodes) {
 					try {
 						for (NodeWeightPair parent : j.parents) {
 							Node i = parent.node;
 							//System.out.println("hidden to input");
-							double g = 1 / (1 + Math.exp(-i.getSum()));
-							double gp = g * (1 - g);
-							double value = gp * j.getSum() * j.getDelta();
-							i.setDelta(value);
+							//double g = 1 / (1 + Math.exp(-i.getSum()));
+							//double gp = g * (1 - g);
+							//double value = gp * j.getSum() * j.getDelta();
+							//i.setDelta(value);
 						}
 					} catch (NullPointerException e) {}
 					j.update_weights(this.learningRate);
 				}
+				*/
 
 				/* Update weights */
-				// weights from hidden to output
-				for(Node j : outputNodes) {
+			// weights from hidden to output
+				/*for(Node j : outputNodes) {
 					try {
 						j.update_weights(this.learningRate);
 					} catch (NullPointerException e) {
@@ -181,8 +232,8 @@ public class NNImpl{
 					try {n.update_weights(this.learningRate);}
 					catch (NullPointerException e ){}
 				}
+				*/
 
-			}
 		}
 	}
 }
