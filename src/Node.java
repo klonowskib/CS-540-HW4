@@ -47,16 +47,6 @@ public class Node{
 		}
 	}
 
-	public void update_weights () {
-		try {
-			for (NodeWeightPair parent : parents) {
-				Node i = parent.node;
-				parent.weight += i.getOutput() * delta;
-			}
-		}
-		catch (NullPointerException e) {}
-
-	}
 	//For an input node sets the input value which will be the value of a particular attribute
 	public void setInput(Double inputValue)
 	{
@@ -83,12 +73,12 @@ public class Node{
 		if(type==2 || type==4)//Not an input or bias node
 		{
 			this.calc_sum();
-			this.outputValue = g(this.sum);
+			this.outputValue = 1/(1 + Math.exp(-this.sum));
 		}
 	}
 
 	public double g_prime () {
-		return g(this.sum) * (1- g(this.sum));
+		return this.outputValue * (1 - this.getOutput());
 	}
 
 	public void calc_sum () {
@@ -98,9 +88,9 @@ public class Node{
 		this.sum = tmp_sum;
 	}
 
-	public double g (double x) {
-		return 1/(1+Math.exp(-x));
-	}
+//	public double g () {
+//		return 1/(1+Math.exp(-x));
+//	}
 
 	public double getSum() {
 		return sum;
@@ -109,7 +99,6 @@ public class Node{
 	//Gets the output value
 	public double getOutput()
 	{
-
 		if(type==0)//Input node
 		{
 			return inputValue;

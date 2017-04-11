@@ -138,41 +138,20 @@ public class NNImpl{
 					tmp = 0;
 				}
 				o[inst_out] = 1;
-
-				/* Back propogation */
-				//output to hidden
-				/*int count = 0;
-				for(Node k : outputNodes){
-					for(NodeWeightPair parent : k.parents) {
-						Node j = parent.node;
-						k.setDelta(learningRate * j.getOutput() * (inst.classValues.get(count) - o[count])*o[count]*(1-o[count]));
-						double value = j.g_prime() * k.getSum() * k.getDelta();
-						j.setDelta(value);
-					}
-					count++;
-					//	j.update_weights();
-				}
-
-				//hidden to input
-				for(Node j : hiddenNodes) {
-					try {
-						for (NodeWeightPair parent : j.parents) {
-							Node i = parent.node;
-
-							//System.out.println("hidden to input");
-						}
-					} catch (NullPointerException e) {}
-					//j.update_weights();
-				}
-
-				/* Update weights */
-				// weights from hidden to output
-				double a = learningRate;
+				for(Node k : outputNodes)
+					k.setDelta(0);
+				for(Node j : hiddenNodes)
+					j.setDelta(0);
+				for(Node i : inputNodes)
+					i.setDelta(0);
 				double jk_sum = 0;
+				double a = learningRate;
 				int count = 0;
 				for(Node k : outputNodes) {
-					k.calculateOutput();
-					double k_delta = (inst.classValues.get(count) - k.getOutput()) * k.getOutput() * (1 - k.getOutput());
+					double k_out = k.getOutput();
+					//double jk_sum = 0;
+					double error = (inst.classValues.get(count) - k_out);
+					double k_delta = error * k_out * (1 - k_out);
 					k.setDelta(k_delta);
 					for (NodeWeightPair hidden : k.parents) {
 						Node j = hidden.node;
@@ -182,6 +161,7 @@ public class NNImpl{
 					}
 					count ++;
 				}
+				//System.out.println(inputNodes.size());
 				count = 0;
 				for (Node j : hiddenNodes) {
 					//hidden.weight += learningRate * j.getOutput() * (inst.classValues.get(count) - o[count]) * k.g_prime();
@@ -192,7 +172,7 @@ public class NNImpl{
 						}
 					}
 					catch (NullPointerException e ){}
-					System.out.print(count);
+					//System.out.print(count);
 				}
 				count ++;
 			}
