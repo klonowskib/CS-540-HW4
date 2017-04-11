@@ -25,9 +25,6 @@ public class Node{
 		return  this.delta;
 	}
 	*/
-	public void updateWeight () {
-
-	}
 	public double delta_w () {return  1.0;}
 
 	//Create a node with a specific type
@@ -50,11 +47,11 @@ public class Node{
 		}
 	}
 
-	public void update_weights (double alpha) {
+	public void update_weights () {
 		try {
 			for (NodeWeightPair parent : parents) {
 				Node i = parent.node;
-				parent.weight = parent.weight + alpha * i.getOutput() * delta;
+				parent.weight += i.getOutput() * delta;
 			}
 		}
 		catch (NullPointerException e) {}
@@ -73,7 +70,7 @@ public class Node{
 	public void setDelta(double delta) {
 		this.delta = delta;
 	}
-	public double setDelta() {
+	public double getDelta() {
 		return this.delta;
 	}
 	/**

@@ -87,7 +87,6 @@ public class NNImpl{
 
 	public int calculateOutputForInstance(Instance inst)
 	{
-		double largest = 0;
 		ArrayList<Double> output = new ArrayList<Double>();
 		int count = 0;
 		/* Forward pass */
@@ -96,9 +95,7 @@ public class NNImpl{
 			try {
 				input.setInput(inst.attributes.get(count));
 			}
-			catch(IndexOutOfBoundsException e){
-				//System.out.println("bad index");
-			}
+			catch(IndexOutOfBoundsException e){}
 			count++;
 		}
 		for(Node n : hiddenNodes)
@@ -109,16 +106,16 @@ public class NNImpl{
 		/* Forward pass */
 
 		int prediction = 0;
+		double largest = -1;
 		count = 0;
 		for(Node n : outputNodes) {
-			double out = n.getOutput();
-			if(largest <= out) {
-				largest = out;
+			if(largest <= n.getOutput()) {
+				largest = n.getOutput();
 				prediction = count;
 			}
 			count++;
 		}
-		//System.out.println(prediction);
+		//	System.out.println(prediction);
 		return prediction;
 	}
 
@@ -141,99 +138,63 @@ public class NNImpl{
 					tmp = 0;
 				}
 				o[inst_out] = 1;
-				double [] error = new double[outputNodes.size()];
-				double [] delta_k = new double[outputNodes.size()];
 
-				int count = 0;
-				double [][] delta_jk = new double [hiddenNodes.size()-1][outputNodes.size()];
-				double [] delta_j = new double[hiddenNodes.size()];
-				for(int k_count =0; k_count < outputNodes.size(); k_count++) {
-					error[k_count] = (inst.classValues.get(k_count) - o[k_count]);
-					delta_k[k_count] = error[k_count]* outputNodes.get(k_count).g_prime();
-					for(int j_count = 0; j_count < hiddenNodes.size()-1; j_count++) {
-						Node j = hiddenNodes.get(j_count);
-						j.calculateOutput();
-						delta_jk[j_count][k_count] = learningRate * j.getOutput() * delta_k[k_count];
-						//used to update weights between l=1 and l=0
-						delta_j[j_count] += j.g_prime() * outputNodes.get(k_count).getSum() * delta_k[k_count];
-					}
-				}
-				double [][] delta_ij = new double [inputNodes.size()][ hiddenNodes.size()];
-				for (int j_count = 0; j_count < hiddenNodes.size()-1; j_count++) {
-
-					try {
-						for(int i_count = 0; i_count < inputNodes.size()-1; i_count++) {
-							Node i = inputNodes.get(i_count);
-							delta_ij[i_count][j_count] = learningRate * i.getOutput() * delta_j[j_count];
-							i_count++;
-						}
-					}
-					catch (NullPointerException e) {}
-					j_count++;
-				}
-				try {
-					for(int k_count = 0; k_count < delta_jk.length - 1; k_count++ ) {
-						for(int j_count =0; j_count < delta_jk[k_count].length -1; j_count++) {
-							outputNodes.get(k_count).parents.get(j_count).weight += delta_jk[j_count][k_count];
-						}
-					}
-					for(int j_count = 0; j_count < delta_ij.length - 1; j_count++ ) {
-						for(int i_count =0; i_count < delta_ij[j_count].length-1; i_count++) {
-							Node j = hiddenNodes.get(j_count);
-							j.parents.get(i_count).weight += delta_ij[i_count][j_count];
-						}
-					}
-				}
-				catch (NullPointerException e){}
-
-			}
 				/* Back propogation */
-			//output to hidden
-				/*
-				int count = 0;
-				for(Node j : outputNodes){
-					j.setDelta(j.g_prime() * (inst.classValues.get(count) - o[count]));
-					for(NodeWeightPair parent : j.parents) {
-						Node i = parent.node;
-						double value = i.g_prime() * j.getSum() * j.getDelta();
-						i.setDelta(value);
+				//output to hidden
+				/*int count = 0;
+				for(Node k : outputNodes){
+					for(NodeWeightPair parent : k.parents) {
+						Node j = parent.node;
+						k.setDelta(learningRate * j.getOutput() * (inst.classValues.get(count) - o[count])*o[count]*(1-o[count]));
+						double value = j.g_prime() * k.getSum() * k.getDelta();
+						j.setDelta(value);
 					}
 					count++;
-					j.update_weights(learningRate);
+					//	j.update_weights();
 				}
-				*/
-				/*
+
 				//hidden to input
 				for(Node j : hiddenNodes) {
 					try {
 						for (NodeWeightPair parent : j.parents) {
 							Node i = parent.node;
+
 							//System.out.println("hidden to input");
-							//double g = 1 / (1 + Math.exp(-i.getSum()));
-							//double gp = g * (1 - g);
-							//double value = gp * j.getSum() * j.getDelta();
-							//i.setDelta(value);
 						}
 					} catch (NullPointerException e) {}
-					j.update_weights(this.learningRate);
+					//j.update_weights();
 				}
-				*/
 
 				/* Update weights */
-			// weights from hidden to output
-				/*for(Node j : outputNodes) {
-					try {
-						j.update_weights(this.learningRate);
-					} catch (NullPointerException e) {
-						e.printStackTrace();
+				// weights from hidden to output
+				double a = learningRate;
+				double jk_sum = 0;
+				int count = 0;
+				for(Node k : outputNodes) {
+					k.calculateOutput();
+					double k_delta = (inst.classValues.get(count) - o[count]) * k.g_prime();
+					k.setDelta(k_delta);
+					for (NodeWeightPair hidden : k.parents) {
+						Node j = hidden.node;
+						jk_sum += hidden.weight * k.getDelta();
+						j.setDelta(j.g_prime() * jk_sum);
+						hidden.weight += a * j.getOutput() * k.getDelta();
 					}
+					count ++;
 				}
-				for (Node n : hiddenNodes) {
-					try {n.update_weights(this.learningRate);}
+				count = 0;
+				for (Node j : hiddenNodes) {
+					//hidden.weight += learningRate * j.getOutput() * (inst.classValues.get(count) - o[count]) * k.g_prime();
+					try {
+						for(NodeWeightPair i : j.parents) {
+							double iout = i.node.getOutput();
+							i.weight += a *  iout * j.getDelta();
+						}
+					}
 					catch (NullPointerException e ){}
 				}
-				*/
-
+				count ++;
+			}
 		}
 	}
 }
