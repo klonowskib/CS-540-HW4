@@ -192,6 +192,7 @@ public class NNImpl{
 						}
 					}
 					catch (NullPointerException e ){}
+					System.out.print(count);
 				}
 				count ++;
 			}
