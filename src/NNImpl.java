@@ -172,7 +172,7 @@ public class NNImpl{
 				int count = 0;
 				for(Node k : outputNodes) {
 					k.calculateOutput();
-					double k_delta = (inst.classValues.get(count) - o[count]) * k.g_prime();
+					double k_delta = (inst.classValues.get(count) - k.getOutput()) * k.getOutput() * (1 - k.getOutput());
 					k.setDelta(k_delta);
 					for (NodeWeightPair hidden : k.parents) {
 						Node j = hidden.node;
