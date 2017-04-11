@@ -89,7 +89,7 @@ public class NNImpl{
 	{
 		ArrayList<Double> output = new ArrayList<Double>();
 		int count = 0;
-		/* Forward pass */
+			/* Forward pass */
 		for (Node input : inputNodes) {
 			//set the input to the corresponding aspect of the instance
 			try {
@@ -103,7 +103,7 @@ public class NNImpl{
 		//System.out.println();
 		for(Node n : outputNodes)
 			n.calculateOutput();
-		/* Forward pass */
+			/* Forward pass */
 
 		int prediction = 0;
 		double largest = -1;
@@ -132,50 +132,63 @@ public class NNImpl{
 		while (epoch <= maxEpoch) {
 			epoch++;
 			for (Instance inst : trainingSet) {
-				int inst_out = this.calculateOutputForInstance(inst);
-				int [] o = new int[inst.classValues.size()];
-				for(int tmp : o) {
-					tmp = 0;
+				calculateOutputForInstance(inst);
+				// O = out put of neural net from
+				ArrayList<Double> O = new ArrayList<>(5);
+				ArrayList<Double> error = new ArrayList<>(5);
+				Double[][] w_ij = new Double[inputNodes.size()][hiddenNodes.size()];
+				Double[][] w_jk = new Double[hiddenNodes.size()][5];
+				for (int idx = 0; idx < outputNodes.size(); idx++) {
+					O.add(idx, outputNodes.get(idx).getOutput());
 				}
-				o[inst_out] = 1;
-				for(Node k : outputNodes)
-					k.setDelta(0);
-				for(Node j : hiddenNodes)
-					j.setDelta(0);
-				for(Node i : inputNodes)
-					i.setDelta(0);
-				double jk_sum = 0;
-				double a = learningRate;
-				int count = 0;
-				for(Node k : outputNodes) {
-					double k_out = k.getOutput();
-					//double jk_sum = 0;
-					double error = (inst.classValues.get(count) - k_out);
-					double k_delta = error * k_out * (1 - k_out);
-					k.setDelta(k_delta);
-					for (NodeWeightPair hidden : k.parents) {
-						Node j = hidden.node;
-						jk_sum += hidden.weight * k.getDelta();
-						j.setDelta(j.g_prime() * jk_sum);
-						hidden.weight += a * j.getOutput() * k.getDelta();
+
+				// T = desired output, i.e. Target or Teachers output
+				// calculate error (Tk - Ok) at each output unit k
+				for (int idx = 0; idx < 5; idx++) {
+					error.add(idx, inst.classValues.get(idx) - O.get(idx));
+				}
+				// for each hidden unit j and output unit k compute
+				for (int j = 0; j < hiddenNodes.size(); j++) {
+					for (int k = 0; k < outputNodes.size(); k++) {
+						// delta wjk = alpha * aj * (Tk - Ok) g'(in_k)
+						w_jk[j][k] = learningRate * hiddenNodes.get(j).getSum() * error.get(k) * g_prime(outputNodes.get(k).getSum());
 					}
-					count ++;
 				}
-				//System.out.println(inputNodes.size());
-				count = 0;
-				for (Node j : hiddenNodes) {
-					//hidden.weight += learningRate * j.getOutput() * (inst.classValues.get(count) - o[count]) * k.g_prime();
-					try {
-						for(NodeWeightPair i : j.parents) {
-							double iout = i.node.getOutput();
-							i.weight += a *  iout * j.getDelta();
+
+				// for each input unit i and hidden unit j compute
+				for (int i = 0; i < inputNodes.size()-1; i++) {
+					for (int j = 0; j < hiddenNodes.size()-1; j++) {
+						// delta wij = alpha * ai * g'(in_j)*sum[wjk *(Tk-Ok) * g'(in_k)]
+						double sumK = 0.0;
+						for (int k = 0; k < outputNodes.size(); k++) {
+							sumK += outputNodes.get(k).parents.get(j).weight * error.get(k) * g_prime(outputNodes.get(k).getSum());
 						}
+						w_ij[i][j] = learningRate * inst.attributes.get(i) * g_prime(hiddenNodes.get(j).getSum()) * sumK;
 					}
-					catch (NullPointerException e ){}
-					//System.out.print(count);
 				}
-				count ++;
+				// for all p, q in network wpq = wpq + delta wpq
+				// update in->hidden
+				for (int q = 0; q < hiddenNodes.size()-1; q++) {
+					for (int p = 0; p < inputNodes.size()-1; p++) {
+						// System.out.println(hidW[p][q]);
+						hiddenNodes.get(q).parents.get(p).weight += w_ij[p][q];
+					}
+				}
+
+				// update hidden->out
+				for (int q = 0; q < outputNodes.size(); q++) {
+					for (int p = 0; p < hiddenNodes.size(); p++) {
+						outputNodes.get(q).parents.get(p).weight += w_jk[p][q];
+					}
+				}
 			}
 		}
+	}
+
+	public double g (double x) {
+		return 1/(1+Math.exp(-x));
+	}
+	public double g_prime(double x) {
+		return g(x)*(1-g(x));
 	}
 }

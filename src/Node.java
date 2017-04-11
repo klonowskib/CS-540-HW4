@@ -77,9 +77,6 @@ public class Node{
 		}
 	}
 
-	public double g_prime () {
-		return this.outputValue * (1 - this.getOutput());
-	}
 
 	public void calc_sum () {
 		double tmp_sum = 0;
